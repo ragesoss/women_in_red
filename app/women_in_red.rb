@@ -72,7 +72,7 @@ articles_by_month.each do |month, articles_for_month|
 end
 
 articles_by_month.each do |month, articles_for_month|
-  CSV.open("/public/#{month}.csv", 'wb') do |csv|
+  CSV.open("#{Rails.root}/public/#{month}.csv", 'wb') do |csv|
     articles_for_month.each do |article|
       title = article.keys[0]
       date = article.values[0]
