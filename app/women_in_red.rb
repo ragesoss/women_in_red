@@ -12,8 +12,6 @@ pages_to_check = ["Wikipedia:WikiProject Women's history/New articles",
                   'User:AlexNewArtBot/WomenScientistsSearchResult',
                   'User:AlexNewArtBot/OperaSearchResult']
 
-month =
-
 def article_links_query(page_title)
   query = { prop: 'links',
             titles: page_title,
@@ -39,6 +37,7 @@ def article_links(page_title)
 end
 
 def creation_date(title)
+  pp title
   response = Wiki.query prop: 'revisions',
                         titles: title,
                         rvdir: 'newer',
@@ -59,11 +58,25 @@ articles_linked = articles_linked.map do |title|
   { title => creation_date(title) }
 end
 
-articles_linked = articles_linked.sort_by { |x| x.values[0] }.reverse
-CSV.open('new_articles.csv', 'wb') do |csv|
-  articles_linked.each do |article|
-    title = article.keys[0]
-    date = article.values[0]
-    csv << [title, date]
+pp articles_linked
+
+articles_by_month = articles_linked.group_by do |title_and_date|
+  puts title_and_date.keys[0]
+  puts title_and_date.values[0]
+  title_and_date.values[0][0..6]
+end
+
+articles_by_month.each do |month, articles_for_month|
+  pp articles_for_month
+  articles_for_month.sort_by! { |x| x.values[0] }.reverse
+end
+
+articles_by_month.each do |month, articles_for_month|
+  CSV.open("/public/#{month}.csv", 'wb') do |csv|
+    articles_for_month.each do |article|
+      title = article.keys[0]
+      date = article.values[0]
+      csv << [title, date]
+    end
   end
 end
