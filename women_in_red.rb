@@ -1,5 +1,5 @@
 require 'net/http'
-require './wiki_api'
+require_relative './wiki_api'
 require 'pp'
 require 'date'
 require 'csv'
