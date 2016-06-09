@@ -6,26 +6,46 @@ require 'csv'
 
 puts 'ohai'
 
-pages_to_check = ["Wikipedia:WikiProject Women's history/New articles",
+pages_to_check = ['User:AlexNewArtBot/WomensHistorySearchResult',
                   'User:AlexNewArtBot/WomenartistsSearchResult',
                   'User:AlexNewArtBot/WomenWritersSearchResult',
                   'User:AlexNewArtBot/WomenScientistsSearchResult',
                   'User:AlexNewArtBot/OperaSearchResult']
 
-def article_links_query(page_title)
+def article_links_query(revid)
   query = { prop: 'links',
-            titles: page_title,
+            revids: revid,
             plnamespace: 0,
             pllimit: 500 }
   query
 end
 
-def article_links(page_title)
+def revisions_query(page_title)
+  query = { prop: 'revisions',
+            titles: page_title,
+            rvlimit: 60 }
+  query
+end
+
+def recent_revision_ids(page_title)
+  query = revisions_query(page_title)
+  response = Wiki.query query
+  revids = []
+  response.data['pages'].values[0]['revisions'].each do |rev|
+    revids << rev['revid']
+  end
+  revids
+end
+
+def article_links(revid)
   linked_titles = []
-  query = article_links_query(page_title)
+  query = article_links_query(revid)
   continue = true
+  i = 0
   until continue.nil?
     response = Wiki.query query
+    pp revid
+    pp i += 1
     results = response.data['pages'].values[0]['links']
     results.each do |page|
       linked_titles << page['title']
@@ -46,28 +66,35 @@ def creation_date(title)
   Date.parse(response.data['pages'].values[0]['revisions'][0]['timestamp']).to_s
 end
 
-articles_linked = []
+revids_to_check = []
 
-pages_to_check.each do |page|
-  articles_linked += article_links(page)
+pages_to_check.each do |page_title|
+  revids_to_check += recent_revision_ids(page_title)
 end
 
+articles_linked = []
+
+revids_to_check.each do |revid|
+  articles_linked += article_links(revid)
+  pp articles_linked.size
+end
+
+pp articles_linked.size
+
 articles_linked = articles_linked.uniq
+
+pp 'ohai'
+pp articles_linked.size
 
 articles_linked = articles_linked.map do |title|
   { title => creation_date(title) }
 end
 
-pp articles_linked
-
 articles_by_month = articles_linked.group_by do |title_and_date|
-  puts title_and_date.keys[0]
-  puts title_and_date.values[0]
   title_and_date.values[0][0..6]
 end
 
 articles_by_month.each do |month, articles_for_month|
-  pp articles_for_month
   articles_for_month.sort_by! { |x| x.values[0] }.reverse
 end
 
