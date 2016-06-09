@@ -8,7 +8,11 @@ class Wiki
 
   # General entry point for making arbitrary queries of the Wikipedia API
   def self.query(query_parameters, opts = {})
-    wikipedia('query', query_parameters, opts)
+    wikipedia(:query, query_parameters, opts)
+  end
+
+  def self.parse(query_parameters, opts = {})
+    wikipedia(:parse, query_parameters, opts)
   end
 
   def self.get_page_content(page_title, opts = {})
@@ -25,7 +29,7 @@ class Wiki
     def wikipedia(action, query, opts = {})
       tries ||= 3
       @mediawiki = api_client(opts)
-      @mediawiki.send(action, query)
+      @mediawiki.action(action, query)
     rescue StandardError => e
       tries -= 1
       typical_errors = [Faraday::TimeoutError,
